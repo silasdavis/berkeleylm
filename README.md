@@ -1,4 +1,4 @@
-This is a fork of the original repo at (http://berkeleylm.googlecode.com) which is not atively supported.
+This is a fork of the original repo at http://berkeleylm.googlecode.com which is not actively supported anymore.
 
 List of changes:
 
