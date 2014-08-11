@@ -1,4 +1,10 @@
-Berkeley Language Model release 1.0
+This is a fork of the original repo at berkeleylm.googlecode.com which is not atively supported.
+
+List of changes:
+
+* Fixed probability scoring in ``ComputeLogProbabilityOfTextStream''.
+
+# Berkeley Language Model
 
 To compile this software just type "ant" in the root directory (assuming ant is installed and properly configured).
 
