@@ -33,19 +33,23 @@ import edu.berkeley.nlp.lm.util.Logger;
  */
 public class ComputeLogProbabilityOfTextStream
 {
+    private static boolean probPerSentence = false;
 
-	/**
-	 * 
-	 */
 	private static void usage() {
-		System.err.println("Usage: <Berkeley LM binary file> <outputfile>*\nor\n-g <vocab_cs file> <Google LM Binary>");
+		System.err.println("Usage: [-s] [-g <vocab_cs file>] <Berkeley LM binary file> <input_file>*\n" +
+                "-s prints per sentence probability");
 		System.exit(1);
 	}
 
-	public static void main(final String[] argv) throws FileNotFoundException, IOException {
+	public static void main(final String[] argv) throws IOException
+    {
 		int i = 0;
 		if (i >= argv.length) usage();
 		boolean isGoogleBinary = false;
+        if (argv[i].equals("-s")) {
+            probPerSentence = true;
+            i++;
+        }
 		if (argv[i].equals("-g")) {
 			isGoogleBinary = true;
 			i++;
@@ -59,20 +63,18 @@ public class ComputeLogProbabilityOfTextStream
 		String binaryFile = argv[i++];
 		List<String> files = Arrays.asList(Arrays.copyOfRange(argv, i, argv.length));
 		if (files.isEmpty()) files = Collections.singletonList("-");
-		Logger.setGlobalLogger(new Logger.SystemLogger(System.err, System.err));
+		Logger.setGlobalLogger(new Logger.SystemLogger(System.out, System.err));
 		NgramLanguageModel<String> lm = readBinary(isGoogleBinary, vocabFile, binaryFile);
 		double prob = computeProb(files, lm);
-		System.err.print("Log probability of text is: ");
-		System.out.println(prob);
+		System.out.println(String.format("Log probability of text is: %f", prob));
 	}
 
 	/**
 	 * @param files
 	 * @param lm
 	 * @throws IOException
-	 * @throws FileNotFoundException
 	 */
-	private static double computeProb(List<String> files, NgramLanguageModel<String> lm) throws IOException, FileNotFoundException {
+	private static double computeProb(List<String> files, NgramLanguageModel<String> lm) throws IOException {
 		double logProb = 0.0;
 		for (String file : files) {
 			Logger.startTrack("Scoring file " + file + "; current log probability is " + logProb);
@@ -81,7 +83,10 @@ public class ComputeLogProbabilityOfTextStream
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new BufferedInputStream(is)));
 			for (String line : Iterators.able(IOUtils.lineIterator(reader))) {
 				List<String> words = Arrays.asList(line.trim().split("\\s+"));
-				logProb += lm.scoreSentence(words);
+                double sentenceProb = lm.scoreSentence(words);
+                if (probPerSentence)
+                    System.out.println(String.format("Log probability of the sentence is: %f", sentenceProb));
+				logProb += sentenceProb;
 			}
 			Logger.endTrack();
 		}
