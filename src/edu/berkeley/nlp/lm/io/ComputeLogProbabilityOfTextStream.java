@@ -35,12 +35,12 @@ public class ComputeLogProbabilityOfTextStream {
         int i = 0;
         if (i >= argv.length) usage();
         String vocabFile = null;
-        if (argv[i++].equals("-o")) {
-            if (i >= argv.length) usage();
+        if (argv[i].equals("-o")) {
+            if (++i >= argv.length) usage();
             writer = new PrintStream(new File(argv[i++]));
         }
-        if (argv[i++].equals("-g")) {
-            if (i >= argv.length) usage();
+        if (argv[i].equals("-g")) {
+            if (++i >= argv.length) usage();
             vocabFile = argv[i++];
         }
         if (i >= argv.length) usage();
