@@ -1,11 +1,6 @@
 package edu.berkeley.nlp.lm.io;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -28,10 +23,10 @@ import edu.berkeley.nlp.lm.util.Logger;
  * @author adampauls
  */
 public class ComputeLogProbabilityOfTextStream {
-    private static boolean probPerSentence = false;
+    private static PrintStream writer = null;
 
     private static void usage() {
-        System.err.println("Usage: [-s] [-g <vocab_cs file>] <Berkeley LM binary file> <input_file>*\n" +
+        System.err.println("Usage: [-o output_file] [-g <vocab_cs file>] <Berkeley LM binary file> <input_file>*\n" +
                 "-s prints per sentence probability");
         System.exit(1);
     }
@@ -39,18 +34,13 @@ public class ComputeLogProbabilityOfTextStream {
     public static void main(final String[] argv) throws IOException {
         int i = 0;
         if (i >= argv.length) usage();
-        boolean isGoogleBinary = false;
-        if (argv[i].equals("-s")) {
-            probPerSentence = true;
-            i++;
-        }
-        if (argv[i].equals("-g")) {
-            isGoogleBinary = true;
-            i++;
-        }
-        if (i >= argv.length) usage();
         String vocabFile = null;
-        if (isGoogleBinary) {
+        if (argv[i++].equals("-o")) {
+            if (i >= argv.length) usage();
+            writer = new PrintStream(new File(argv[i++]));
+        }
+        if (argv[i++].equals("-g")) {
+            if (i >= argv.length) usage();
             vocabFile = argv[i++];
         }
         if (i >= argv.length) usage();
@@ -58,9 +48,10 @@ public class ComputeLogProbabilityOfTextStream {
         List<String> files = Arrays.asList(Arrays.copyOfRange(argv, i, argv.length));
         if (files.isEmpty()) files = Collections.singletonList("-");
         Logger.setGlobalLogger(new Logger.SystemLogger(System.out, System.err));
-        NgramLanguageModel<String> lm = readBinary(isGoogleBinary, vocabFile, binaryFile);
+        NgramLanguageModel<String> lm = readBinary(vocabFile, binaryFile);
         double prob = computeProb(files, lm);
-        System.out.println(String.format("Log probability of text is: %f", prob));
+        System.out.println(String.format("Normalized Log probability of text is: %f", prob));
+        writer.close();
     }
 
     /**
@@ -70,6 +61,7 @@ public class ComputeLogProbabilityOfTextStream {
      */
     private static double computeProb(List<String> files, NgramLanguageModel<String> lm) throws IOException {
         double logProb = 0.0;
+        long wordCount = 0;
         for (String file : files) {
             Logger.startTrack("Scoring file " + file + "; current log probability is " + logProb);
             final InputStream is = (file.equals("-")) ? System.in : (file.endsWith(".gz") ? new GZIPInputStream(new FileInputStream(file))
@@ -78,24 +70,26 @@ public class ComputeLogProbabilityOfTextStream {
             for (String line : Iterators.able(IOUtils.lineIterator(reader))) {
                 List<String> words = Arrays.asList(line.trim().split("\\s+"));
                 double sentenceProb = lm.scoreSentence(words);
-                if (probPerSentence)
-                    System.out.println(String.format("Sentence prob: %f / Normalized prob: %f", sentenceProb, sentenceProb / words.size()));
+                if (writer != null)
+                    writer.println(String.format("%f;%f", sentenceProb, sentenceProb / words.size()));
                 logProb += sentenceProb;
+                wordCount +=  words.size();
             }
             Logger.endTrack();
         }
-        return logProb;
+        if (writer != null)
+            writer.println(String.format("%f;%f", logProb, logProb / wordCount));
+        return logProb/wordCount;
     }
 
     /**
-     * @param isGoogleBinary
      * @param vocabFile
      * @param binaryFile
      * @return
      */
-    private static NgramLanguageModel<String> readBinary(boolean isGoogleBinary, String vocabFile, String binaryFile) {
-        NgramLanguageModel<String> lm = null;
-        if (isGoogleBinary) {
+    private static NgramLanguageModel<String> readBinary(String vocabFile, String binaryFile) {
+        NgramLanguageModel<String> lm;
+        if (vocabFile != null) {
             Logger.startTrack("Reading Google Binary " + binaryFile + " with vocab " + vocabFile);
             lm = LmReaders.readGoogleLmBinary(binaryFile, vocabFile);
             Logger.endTrack();
