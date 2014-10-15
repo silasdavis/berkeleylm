@@ -49,8 +49,8 @@ public class ComputeLogProbabilityOfTextStream {
         if (files.isEmpty()) files = Collections.singletonList("-");
         Logger.setGlobalLogger(new Logger.SystemLogger(System.out, System.err));
         NgramLanguageModel<String> lm = readBinary(vocabFile, binaryFile);
-        double prob = computeProb(files, lm);
-        System.out.println(String.format("Normalized Log probability of text is: %f", prob));
+        double perplexity = computeProb(files, lm);
+        System.out.println(String.format("Perplexity of the text is: %f", perplexity));
         writer.close();
     }
 
@@ -79,7 +79,7 @@ public class ComputeLogProbabilityOfTextStream {
         }
         if (writer != null)
             writer.println(String.format("%f;%f", logProb, logProb / wordCount));
-        return logProb/wordCount;
+        return Math.pow(2, -logProb/wordCount);
     }
 
     /**

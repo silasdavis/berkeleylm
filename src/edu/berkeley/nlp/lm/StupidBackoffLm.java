@@ -47,7 +47,7 @@ public class StupidBackoffLm<W> extends AbstractArrayEncodedNgramLanguageModel<W
 	@Override
 	public float getLogProb(final int[] ngram, final int startPos, final int endPos) {
 		final NgramMap<LongRef> localMap = map;
-		float logProb = oovWordLogProb;
+		double logProb = oovWordLogProb;
 		long probContext = 0L;
 		int probContextOrder = -1;
 		long backoffContext = 0L;
@@ -59,7 +59,7 @@ public class StupidBackoffLm<W> extends AbstractArrayEncodedNgramLanguageModel<W
 			probContext = localMap.getValueAndOffset(probContext, probContextOrder, ngram[i], scratch);
 
 			if (probContext < 0) {
-				return logProb;
+				return (float)logProb;
 			} else {
 				final long currCount = scratch.value;
 				long backoffCount = -1L;
@@ -69,12 +69,12 @@ public class StupidBackoffLm<W> extends AbstractArrayEncodedNgramLanguageModel<W
 					backoffContext = localMap.getValueAndOffset(backoffContext, backoffContextOrder++, ngram[i], scratch);
 					backoffCount = scratch.value;
 				}
-				logProb = (float) Math.log(currCount) - (float) Math.log(backoffCount) + (i - startPos)*(float)Math.log(alpha);
+				logProb = (Math.log(currCount) - Math.log(backoffCount) + (i - startPos)*Math.log(alpha))/Math.log(2);
 				probContextOrder++;
 			}
 
 		}
-		return logProb;
+		return (float)logProb;
 	}
 
 	/**
