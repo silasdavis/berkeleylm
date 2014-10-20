@@ -3,6 +3,8 @@ This is a fork of the original repo at http://berkeleylm.googlecode.com which is
 List of changes:
 
 * Fixed probability scoring in ``ComputeLogProbabilityOfTextStream''.
+* Computes **perplexity** instead of log probability sum.
+* Added possibility to log per line probability and normalized probability for debug.
 
 # Berkeley Language Model
 
