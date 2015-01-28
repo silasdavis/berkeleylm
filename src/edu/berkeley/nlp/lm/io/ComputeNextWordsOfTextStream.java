@@ -58,6 +58,7 @@ public class ComputeNextWordsOfTextStream {
                 for (Entry<String, Double> entry: c.getEntriesSortedByDecreasingCount()){
                     if (entry.getKey().startsWith("<dbpedia:")) {
                         System.out.println(line + ": " + entry.getKey() + ": " +entry.getValue() + ": " + i);
+                        break;
                     }
                     i++;
                 }
