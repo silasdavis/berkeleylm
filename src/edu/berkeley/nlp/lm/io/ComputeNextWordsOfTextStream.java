@@ -53,7 +53,7 @@ public class ComputeNextWordsOfTextStream {
             for (String line : Iterators.able(IOUtils.lineIterator(reader))) {
                 List<String> words = Arrays.asList(line.trim().split("\\s+")).subList(0, 2);
                 Counter<String> c = NgramLanguageModel.StaticMethods.getDistributionOverNextWords(lm, words);
-                System.out.println(c.toString())
+                System.out.println(c.toString());
             }
             Logger.endTrack();
         }
