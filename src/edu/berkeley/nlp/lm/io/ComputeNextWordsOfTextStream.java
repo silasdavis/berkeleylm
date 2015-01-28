@@ -23,7 +23,7 @@ import edu.berkeley.nlp.lm.collections.Counter;
  *
  * @author adampauls
  */
-public class ComputeLogProbabilityOfTextStream {
+public class ComputeNextWordsOfTextStream {
 
     private static void usage() {
         System.err.println("Usage: <Berkeley LM binary file> <input_file>*");
