@@ -10,6 +10,7 @@ import edu.berkeley.nlp.lm.NgramLanguageModel;
 import edu.berkeley.nlp.lm.collections.Iterators;
 import edu.berkeley.nlp.lm.util.Logger;
 import edu.berkeley.nlp.lm.collections.Counter;
+import java.util.Map.Entry;
 
 /**
  * Computes the log probability of a list of files. With the <code>-g</code>
@@ -53,7 +54,13 @@ public class ComputeNextWordsOfTextStream {
             for (String line : Iterators.able(IOUtils.lineIterator(reader))) {
                 List<String> words = Arrays.asList(line.trim().split("\\s+")).subList(0, 2);
                 Counter<String> c = NgramLanguageModel.StaticMethods.getDistributionOverNextWords(lm, words);
-                System.out.println(c.argMax());
+                int i = 0;
+                for (Entry<String, Double> entry: c.getEntriesSortedByDecreasingCount()){
+                    if (entry.getKey().startsWith("<dbpedia:")) {
+                        System.out.println(line + ": " + entry.getKey() + ": " +entry.getValue() + ": " + i);
+                    }
+                    i++;
+                }
             }
             Logger.endTrack();
         }
